@@ -1,0 +1,12 @@
+<gcds-link 
+  {{ with .Destination }}href="{{ . }}"{{ end }}
+  {{ with .Attributes.display }}display="{{ . }}"{{ end }}
+  {{ with .Attributes.variant }}variant="{{ . }}"{{ end }}
+  {{ with .Attributes.rel }}rel="{{ . }}"{{ end }}
+  {{ with .Attributes.target }}target="{{ . }}"{{ end }}
+  {{ with .Attributes.size }}size="{{ . }}"{{ end }}
+  {{ with .Attributes.external }}external{{ end }}
+  {{ with .Attributes.download }}download="{{ . }}"{{ end }}
+  {{ with .Attributes.type }}type="{{ . }}"{{ end }}>
+  {{- .Text | safeHTML -}}
+</gcds-link>

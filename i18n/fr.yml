@@ -1,0 +1,22 @@
+protospace-landing-url:
+  other: "/fr/"
+protospace-name:
+  other: "Espace de prototypage"
+home:
+  other: "Accueil"
+switch-language:
+  other: "English"
+skip-to-content:
+  other: "Passer au contenu principal"
+main-menu:
+  other: "Menu principal"
+search:
+  other: "Rechercher"
+categories:
+  other: "Catégories"
+tags:
+  other: "Étiquettes"
+language-selection:
+  other: "Sélection de la langue"
+contact:
+  other: "Contactez-nous"

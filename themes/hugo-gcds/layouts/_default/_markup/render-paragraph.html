@@ -1,0 +1,7 @@
+<gcds-text
+  {{ with .Attributes.textRole }}text-role="{{ . }}"{{ end }}
+  {{ with .Attributes.size }}size="{{ . }}"{{ end }}
+  {{ with .Attributes.characterLimit }}character-limit="{{ . }}"{{ end }}
+  {{ with .Attributes.marginTop }}margin-top="{{ . }}"{{ end }}>
+  {{- .Text | safeHTML -}}
+</gcds-text>

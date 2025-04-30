@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="{{ or site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}">
+<head>
+  {{ partial "head.html" . }}
+</head>
+<body>
+  <gcds-header lang-href="#" skip-to-href="#main-content">
+    <gcds-search slot="search"></gcds-search>
+    {{ partial "breadcrumbs.html" . }}
+  </gcds-header>
+  <gcds-container id="main-content" main-container size="xl" centered tag="main">
+    {{ block "main" . }}{{ end }}
+  </gcds-container>
+  <gcds-footer
+      display="full"
+      contextual-heading="Canadian Digital Service"
+      contextual-links='{ "Contact us": "#"}'
+    >
+    </gcds-footer>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "hugo-cli": "^0.14.0"
+  },
+  "dependencies": {
+    "@cdssnc/gcds-components": "^0.34.2"
+  }
+}

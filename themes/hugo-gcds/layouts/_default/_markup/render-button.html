@@ -1,0 +1,11 @@
+<gcds-button
+  {{ with .Get "type" }}type="{{ . }}"{{ end }}
+  {{ with .Get "buttonRole" }}button-role="{{ . }}"{{ end }}
+  {{ with .Get "buttonId" }}button-id="{{ . }}"{{ end }}
+  {{ with .Get "size" }}size="{{ . }}"{{ end }}
+  {{ if .Get "disabled" }}disabled{{ end }}
+  {{ with .Get "name" }}name="{{ . }}"{{ end }}
+  {{ with .Get "value" }}value="{{ . }}"{{ end }}
+>
+  {{ .Inner | safeHTML }}
+</gcds-button>

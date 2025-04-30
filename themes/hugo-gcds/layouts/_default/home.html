@@ -1,0 +1,7 @@
+{{ define "main" }}
+  {{ .Content }}
+  {{ range site.RegularPages }}
+    <gcds-heading tag="h1">{{ .LinkTitle }}</gcds-heading>
+    {{ .Summary }}
+  {{ end }}
+{{ end }}

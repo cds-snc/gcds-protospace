@@ -1,0 +1,13 @@
+{{ $taxonomy := .taxonomy }}
+{{ with .page.GetTerms $taxonomy }}
+  <div class="taxonomy-terms">
+    <h3>{{ i18n $taxonomy }}</h3>
+    <ul>
+      {{ range . }}
+        <li>
+          <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+        </li>
+      {{ end }}
+    </ul>
+  </div>
+{{ end }}

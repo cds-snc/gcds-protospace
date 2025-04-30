@@ -1,0 +1,22 @@
+protospace-landing-url:
+  other: "/en/"
+protospace-name:
+  other: "Protospace"
+home:
+  other: "Home"
+switch-language:
+  other: "Français"
+skip-to-content:
+  other: "Skip to main content"
+main-menu:
+  other: "Main Menu"
+search:
+  other: "Search"
+categories:
+  other: "Categories"
+tags:
+  other: "Tags"
+language-selection:
+  other: "Language selection"
+contact:
+  other: "Contact us"
