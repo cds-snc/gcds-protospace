@@ -1,0 +1,20 @@
+{{ $hasAttrs := strings.Contains .Text "{" }}
+{{ if $hasAttrs }}
+  {{ $parts := split .Text "{" }}
+  {{ $content := index $parts 0 }}
+  {{ $attrStr := strings.TrimSuffix "}" (index $parts 1) }}
+  {{ $attrs := split $attrStr " " }}
+  <gcds-text
+    {{- range $attrs -}}
+      {{- $kv := split . "=" -}}
+      {{- if eq (len $kv) 2 -}}
+        {{- $key := index $kv 0 -}}
+        {{- $value := trim (index $kv 1) "\"'" -}}
+        {{ $key }}="{{ $value }}"
+      {{- end -}}
+    {{- end -}}>
+    {{- $content | safeHTML -}}
+  </gcds-text>
+{{ else }}
+  <gcds-text>{{ .Text | safeHTML }}</gcds-text>
+{{ end }}

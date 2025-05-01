@@ -1,11 +1,27 @@
 baseURL = 'https://test.canada.ca/gcds-protospace/'
-title = 'GCDS Protospace | Espace de prototypage du SDGC'
-theme = 'hugo-gcds'
-themeDir = 'themes/hugo-gcds'
-themeMeta = 'themes/hugo-gcds/theme.toml'
-
+theme = 'hugo-gcds' # Added theme setting
 defaultContentLanguage = 'en'
 defaultContentLanguageInSubdir = true
+
+[languages.en]
+languageName = "English"
+contentDir = "content/en"
+title = "GCDS Protospace"
+weight = 1
+languageCode = "en-ca"
+
+[languages.en.params]
+description = "An open-source prototyping space on GitHub will let us experiment with the GC Design System (GCDS) in a way that's fast, secure, and fully aligned with Government of Canada Digital Standards."
+
+[languages.fr]
+languageName = "Français"
+contentDir = "content/fr"
+title = "Espace de prototypage du SDGC"
+weight = 2
+languageCode = "fr-ca"
+
+[languages.fr.params]
+description = "Un espace de prototypage à code source ouvert sur GitHub nous permettra d'expérimenter avec le Système de conception GC (SDGC) d'une manière rapide, sécurisée et entièrement alignée sur les normes numériques du gouvernement du Canada."
 
 [markup]
   [markup.goldmark]
@@ -13,8 +29,10 @@ defaultContentLanguageInSubdir = true
       unsafe = true
       hardWraps = false
     [markup.goldmark.parser]
-      attribute = true
       autoHeadingID = true
+    [markup.goldmark.parser.attribute]
+      block = true
+      title = true
     [markup.goldmark.extensions]
       typographer = true
   [markup.highlight]
@@ -24,22 +42,3 @@ defaultContentLanguageInSubdir = true
     lineNos = false
     lineNumbersInTable = true
     tabWidth = 4
-
-[languages]
-  [languages.en]
-    languageName = 'English'
-    contentDir = 'content/en'
-    title = 'GCDS Protospace'
-    weight = 1
-    languageCode = 'en-ca'
-    [languages.en.params]
-      description = 'An open-source prototyping space on GitHub will let us experiment with the GC Design System (GCDS) in a way that’s fast, secure, and fully aligned with Government of Canada Digital Standards.'
-
-  [languages.fr]
-    languageName = 'Français'
-    contentDir = 'content/fr'
-    title = 'Espace de prototypage du SDGC'
-    weight = 2
-    languageCode = 'fr-ca'
-    [languages.fr.params]
-      description = "Un espace de prototypage à code source ouvert sur GitHub nous permettra d'expérimenter avec le Système de conception GC (SDGC) d'une manière rapide, sécurisée et entièrement alignée sur les normes numériques du gouvernement du Canada."
