@@ -1,0 +1,35 @@
+name: WordPress Content PR Bot
+
+on:
+  schedule:
+    # Run every day at midnight
+    - cron: '0 0 * * *'
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  fetch-content:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          npm ci
+      
+      - name: Run PR Bot
+        env:
+          GITHUB_TOKEN: ${{ secrets.PR_BOT_GITHUB_TOKEN }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPO: ${{ github.event.repository.name }}
+          WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
+          CONTENT_PATH: packages/website/content/en/posts
+        run: |
+          cd packages/pr-bot
+          npm start

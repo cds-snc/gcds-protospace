@@ -1,0 +1,16 @@
+{
+  "name": "@gcds-protospace/website",
+  "version": "1.0.0",
+  "description": "Hugo website for GCDS Protospace",
+  "scripts": {
+    "dev": "hugo server --bind=0.0.0.0 -D --baseURL=http://localhost:1313 --disableFastRender",
+    "build": "hugo --minify",
+    "clean": "rm -rf public resources"
+  },
+  "dependencies": {
+    "@cdssnc/gcds-components": "^0.34.2"
+  },
+  "devDependencies": {
+    "hugo-cli": "^0.14.0"
+  }
+}

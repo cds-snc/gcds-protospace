@@ -4,7 +4,7 @@
     {
       "label": "Start Hugo Server",
       "type": "shell",
-      "command": "hugo server --bind=0.0.0.0 -D --baseURL=http://localhost:1313 --disableFastRender",
+      "command": "cd packages/website && hugo server --bind=0.0.0.0 -D --baseURL=http://localhost:1313 --disableFastRender",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -15,8 +15,21 @@
     {
       "label": "Build Hugo Site",
       "type": "shell",
-      "command": "hugo --minify",
+      "command": "cd packages/website && hugo --minify",
       "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Start PR Bot",
+      "type": "shell",
+      "command": "cd packages/pr-bot && npm run dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Install Dependencies",
+      "type": "shell",
+      "command": "npm install",
       "problemMatcher": []
     }
   ]

@@ -1,5 +1,5 @@
 baseURL = 'https://test.canada.ca/gcds-protospace/'
-theme = 'hugo-gcds' # Added theme setting
+theme = '../theme' # Updated theme path for monorepo
 defaultContentLanguage = 'en'
 defaultContentLanguageInSubdir = true
 

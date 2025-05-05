@@ -1,6 +1,27 @@
 {
+  "name": "gcds-protospace-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:website",
+    "build": "npm run build:website && npm run build:pr-bot",
+    "dev:website": "cd packages/website && hugo server --bind=0.0.0.0 -D --baseURL=http://localhost:1313 --disableFastRender",
+    "build:website": "cd packages/website && hugo --minify",
+    "dev:pr-bot": "cd packages/pr-bot && npm run dev",
+    "build:pr-bot": "cd packages/pr-bot && npm run build",
+    "dev:all": "concurrently \"npm run dev:website\" \"npm run dev:pr-bot\"",
+    "clean": "npm run clean:website && npm run clean:pr-bot",
+    "clean:website": "cd packages/website && rm -rf public resources",
+    "clean:pr-bot": "cd packages/pr-bot && npm run clean",
+    "postinstall": "npm run install:pr-bot",
+    "install:pr-bot": "cd packages/pr-bot && npm install"
+  },
   "devDependencies": {
-    "hugo-cli": "^0.14.0"
+    "hugo-cli": "^0.14.0",
+    "concurrently": "^8.2.2"
   },
   "dependencies": {
     "@cdssnc/gcds-components": "^0.34.2"

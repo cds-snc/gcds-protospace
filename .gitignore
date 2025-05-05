@@ -15,15 +15,27 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Dependency directories
+node_modules/
+vendor/
 
 # Go workspace file
 go.work
 go.work.sum
-public
-node_modules
 
-# env file
+# Hugo build outputs
+public/
+resources/
+.hugo_build.lock
+
+# Build outputs
+dist/
+build/
+
+# Environment files
 .env
+.env.*
+!.env.example
+
+# Editor configs that should be local
 .hintrc
