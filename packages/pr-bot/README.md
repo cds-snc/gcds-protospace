@@ -1,11 +1,11 @@
 # PR Bot Documentation
 
-The PR Bot is designed to fetch content from a WordPress site and create pull requests to update the Hugo website.
+The PR Bot is designed to fetch content from GC-Articles and create pull requests to update the Hugo website.
 
 ## Features
 
-- Fetches posts from a WordPress API
-- Transforms WordPress content to Hugo-compatible Markdown
+- Fetches posts from the GC-Articles API
+- Transforms GC-Articles content to Hugo-compatible Markdown
 - Creates a pull request with updated content
 
 ## Configuration
@@ -20,8 +20,8 @@ GITHUB_TOKEN=your_github_token
 GITHUB_OWNER=your_github_username_or_org
 GITHUB_REPO=gcds-protospace
 
-# WordPress API configuration
-WORDPRESS_API_URL=https://your-wordpress-site.com/wp-json
+# GC-Articles API configuration
+GC_ARTICLES_API_URL=https://your-wordpress-site.com/wp-json
 
 # Content path (relative to repo root)
 CONTENT_PATH=packages/website/content/en/posts
@@ -106,12 +106,12 @@ jobs:
 
 ## Troubleshooting
 
-### WordPress API Connection Issues
+### GC-Articles API Connection Issues
 
-If you're having trouble connecting to the WordPress API:
+If you're having trouble connecting to the GC-Articles API:
 
 1. Ensure the API URL is correct
-2. Check that the WordPress site has REST API enabled
+2. Check that the GC-Articles site has REST API enabled
 3. Verify any authentication requirements
 
 ### GitHub API Issues

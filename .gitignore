@@ -18,6 +18,7 @@
 # Dependency directories
 node_modules/
 vendor/
+_temp/
 
 # Go workspace file
 go.work

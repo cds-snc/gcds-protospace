@@ -1,8 +1,9 @@
 {
-  "name": "@gcds-protospace/pr-bot",
+  "name": "pr-bot",
   "version": "1.0.0",
-  "description": "PR Bot to fetch content from WordPress for GCDS Protospace",
+  "description": "PR Bot to fetch content from GC-Articles for GCDS Protospace",
   "main": "dist/index.js",
+  "type": "commonjs",
   "scripts": {
     "build": "tsc",
     "dev": "ts-node-dev --respawn src/index.ts",
@@ -12,12 +13,16 @@
   "dependencies": {
     "@octokit/rest": "^20.0.2",
     "dotenv": "^16.4.1",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^2.7.0",
+    "js-base64": "^3.7.5",
+    "lru-cache": "^10.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "rimraf": "^5.0.1", 
+    "glob": "^10.3.10"
   }
 }

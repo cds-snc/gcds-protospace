@@ -43,15 +43,24 @@ jobs:
 
   deploy:
     needs: build
-    # Deploy to GitHub Pages
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ca-central-1
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: github-pages
+
+      - name: Extract artifact
+        run: tar -xf artifact.tar
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync ./packages/website/public s3://${{ secrets.S3_BUCKET_NAME }} --delete

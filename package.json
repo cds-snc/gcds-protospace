@@ -20,8 +20,9 @@
     "install:pr-bot": "cd packages/pr-bot && npm install"
   },
   "devDependencies": {
-    "hugo-cli": "^0.14.0",
-    "concurrently": "^8.2.2"
+    "@types/node-fetch": "^2.6.12",
+    "concurrently": "^8.2.2",
+    "hugo-cli": "^0.14.0"
   },
   "dependencies": {
     "@cdssnc/gcds-components": "^0.34.2"
