@@ -1,9 +1,42 @@
+<!-- Critical CSS Resources -->
+<link
+  rel="stylesheet"
+  href="https://cdn.design-system.alpha.canada.ca/@cdssnc/gcds-utility@1.8.0/dist/gcds-utility.min.css"
+/>
+<link 
+  rel="stylesheet" 
+  href="https://cdn.design-system.alpha.canada.ca/@cdssnc/gcds-components@latest/dist/gcds/gcds.css"
+  media="all"
+  type="text/css"
+/>
+
+<!-- Additional Resources -->
+<link 
+  rel="stylesheet" 
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" 
+  crossorigin="anonymous"
+  media="all"
+  type="text/css"
+/>
+
 {{- with resources.Get "css/main.css" }}
   {{- if eq hugo.Environment "development" }}
-    <link rel="stylesheet" href="{{ .RelPermalink }}">
+    <link 
+      rel="stylesheet" 
+      href="{{ .RelPermalink }}"
+      media="all"
+      type="text/css"
+    >
   {{- else }}
     {{- with . | minify | fingerprint }}
-      <link rel="stylesheet" href="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}" crossorigin="anonymous">
+      <link 
+        rel="stylesheet" 
+        href="{{ .RelPermalink }}" 
+        integrity="{{ .Data.Integrity }}" 
+        crossorigin="anonymous"
+        media="all"
+        type="text/css"
+      >
     {{- end }}
   {{- end }}
 {{- end }}

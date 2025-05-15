@@ -1,5 +1,5 @@
 ---
-title: "Home"
+title: "GCDS Protospace"
 description: "Welcome to the GCDS Protospace!"
 ---
 
