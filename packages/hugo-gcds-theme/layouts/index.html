@@ -1,3 +1,25 @@
 {{ define "main" }}
-<h1>{{ .Site.Title }}</h1>
+<gcds-sr-only>
+  <gcds-heading tag="h1">
+    <h1>{{ .Site.Title }}</h1>
+  </gcds-heading>
+</gcds-sr-only>
+<gcds-container size="sm" padding="300" centered>
+    <gcds-sr-only>
+      <gcds-heading tag="h2">
+        Government of Canada
+      </gcds-heading>
+    </gcds-sr-only>
+    <gcds-button type="link" href="/en">
+      English
+    </gcds-button>
+    <gcds-sr-only>
+      <gcds-heading tag="h2">
+        Gouvernement du Canada
+      </gcds-heading>
+    </gcds-sr-only>
+    <gcds-button type="link" button-role="secondary" href="/fr">
+      Français
+    </gcds-button>
+</gcds-container>
 {{ end }}

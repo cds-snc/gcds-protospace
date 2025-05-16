@@ -1,0 +1,7 @@
+<gcds-alert
+    {{- with (.Get "type") }} type="{{ . }}"{{ end }}
+    {{- with (.Get "heading") }} heading="{{ . }}"{{ end }}
+    {{- with (.Get "dismiss") }} dismiss{{ end }}
+>
+    {{ .Inner }}
+</gcds-alert>
