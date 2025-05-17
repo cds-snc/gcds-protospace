@@ -1,2 +1,24 @@
 node_modules/
 .env
+**/.terragrunt-cache
+!.devcontainer/Dockerfile
+
+# Local testing files and directories
+.tool-versions
+.terraform*
+!.terraform-docs.yml
+!terraform/.terraform.lock.hcl
+test.tf
+terraform/*.tfvars
+*.tfstate*
+
+# macOS system files
+.DS_Store
+
+# Lambda build artifacts
+rds_activity_stream/lambda/layer
+rds_activity_stream/lambda/*.zip
+
+# GitHub workflow files
+.github/workflows/conftest/policy
+.vscode/settings.json
