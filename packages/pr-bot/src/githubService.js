@@ -1,59 +1,30 @@
 const { Octokit } = require('@octokit/rest');
+const logger = require('./utils/logger');
 
 class GitHubService {
   constructor() {
-    const token = process.env.GITHUB_TOKEN;
-    if (!token) {
-      throw new Error('GITHUB_TOKEN environment variable is required');
+    const {
+      GITHUB_TOKEN: token,
+      GITHUB_OWNER: owner,
+      GITHUB_REPO: repo,
+      GITHUB_DEFAULT_BRANCH: defaultBranch = 'main'
+    } = process.env;
+
+    if (!token || !owner || !repo) {
+      throw new Error('Missing required GitHub configuration');
     }
 
-    this.config = {
-      owner: process.env.GITHUB_OWNER || '',
-      repo: process.env.GITHUB_REPO || '',
-      defaultBranch: process.env.GITHUB_DEFAULT_BRANCH || 'main'
-    };
-
-    if (!this.config.owner || !this.config.repo) {
-      throw new Error('GITHUB_OWNER and GITHUB_REPO environment variables are required');
-    }
-
-    this.octokit = new Octokit({
-      auth: token
-    });
+    this.config = { owner, repo, defaultBranch };
+    this.octokit = new Octokit({ auth: token });
   }
 
   /**
-   * Handles GitHub API errors and provides more specific error messages
-   * @param {Error} error - The error from the GitHub API
-   * @param {string} operation - The operation being performed
-   * @returns {Error} A new error with a more specific message
-   */
-  handleGitHubError(error, operation) {
-    if (error.status === 401) {
-      return new Error(`Authentication failed during ${operation}. Please check your GITHUB_TOKEN.`);
-    }
-    if (error.status === 403) {
-      if (error.message.includes('rate limit')) {
-        return new Error(`Rate limit exceeded during ${operation}. Please try again later.`);
-      }
-      return new Error(`Permission denied during ${operation}. Please check your token's permissions.`);
-    }
-    if (error.status === 404) {
-      return new Error(`Resource not found during ${operation}. Please check repository name and owner.`);
-    }
-    if (error.status === 422) {
-      return new Error(`Validation failed during ${operation}. ${error.message}`);
-    }
-    return new Error(`Failed to ${operation}: ${error.message}`);
-  }
-
-  /**
-   * Creates a new branch from the default branch
-   * @param {string} branchName - Name of the new branch
-   * @returns {Promise<string>} SHA of the new branch's HEAD
+   * Create a new branch from the default branch
    */
   async createBranch(branchName) {
     try {
+      logger.info('Creating new branch', { branchName });
+
       // Get the SHA of the default branch
       const { data: ref } = await this.octokit.git.getRef({
         owner: this.config.owner,
@@ -71,35 +42,49 @@ class GitHubService {
 
       return ref.object.sha;
     } catch (error) {
-      throw this.handleGitHubError(error, `create branch ${branchName}`);
+      this.handleError('Failed to create branch', error);
     }
   }
 
   /**
-   * Creates or updates files in the repository
-   * @param {string} branch - Branch name
-   * @param {Array<{path: string, content: string}>} files - Array of files to commit
-   * @param {string} message - Commit message
-   * @returns {Promise<string>} SHA of the new commit
+   * Delete a branch
+   */
+  async deleteRef(branchName) {
+    try {
+      await this.octokit.git.deleteRef({
+        owner: this.config.owner,
+        repo: this.config.repo,
+        ref: `heads/${branchName}`
+      });
+
+      logger.info('Deleted branch', { branchName });
+    } catch (error) {
+      this.handleError('Failed to delete branch', error);
+    }
+  }
+
+  /**
+   * Create or update files in the repository
    */
   async commitFiles(branch, files, message) {
     try {
       const commits = [];
+      
       for (const file of files) {
-        // Get the current file (if it exists) to get its SHA
+        // Get current file (if exists) to get its SHA
         let fileSha;
         try {
           const { data: existingFile } = await this.octokit.repos.getContent({
             owner: this.config.owner,
             repo: this.config.repo,
-            path: file.path,
+            path: file.filePath,
             ref: branch
           });
           fileSha = existingFile.sha;
         } catch (error) {
           // File doesn't exist yet, which is fine
           if (error.status !== 404) {
-            throw this.handleGitHubError(error, `check existence of ${file.path}`);
+            throw error;
           }
         }
 
@@ -107,7 +92,7 @@ class GitHubService {
         const { data: commit } = await this.octokit.repos.createOrUpdateFileContents({
           owner: this.config.owner,
           repo: this.config.repo,
-          path: file.path,
+          path: file.filePath,
           message,
           content: Buffer.from(file.content).toString('base64'),
           branch,
@@ -115,20 +100,20 @@ class GitHubService {
         });
 
         commits.push(commit);
+        logger.info('Committed file', {
+          path: file.filePath,
+          sha: commit.commit.sha
+        });
       }
 
       return commits[commits.length - 1].commit.sha;
     } catch (error) {
-      throw this.handleGitHubError(error, 'commit files');
+      this.handleError('Failed to commit files', error);
     }
   }
 
   /**
-   * Creates a pull request
-   * @param {string} branch - Source branch name
-   * @param {string} title - PR title
-   * @param {string} body - PR description
-   * @returns {Promise<number>} Pull request number
+   * Create a pull request
    */
   async createPullRequest(branch, title, body) {
     try {
@@ -141,18 +126,21 @@ class GitHubService {
         base: this.config.defaultBranch
       });
 
+      logger.info('Created pull request', {
+        number: pr.number,
+        url: pr.html_url
+      });
+
       return pr.number;
     } catch (error) {
-      throw this.handleGitHubError(error, 'create pull request');
+      this.handleError('Failed to create pull request', error);
     }
   }
 
   /**
-   * Closes all open auto-generated PRs
-   * @param {string} prTitlePrefix - The prefix to identify auto-generated PRs
-   * @returns {Promise<void>}
+   * Close all existing automated PRs
    */
-  async closeAutoPRs(prTitlePrefix = 'Content: Sync from GC-Articles') {
+  async closeAutoPRs(prTitlePrefix = 'Content Sync:') {
     try {
       const { data: prs } = await this.octokit.pulls.list({
         owner: this.config.owner,
@@ -162,6 +150,7 @@ class GitHubService {
 
       for (const pr of prs) {
         if (pr.title.startsWith(prTitlePrefix)) {
+          // Close the PR
           await this.octokit.pulls.update({
             owner: this.config.owner,
             repo: this.config.repo,
@@ -170,26 +159,60 @@ class GitHubService {
           });
 
           // Delete the branch
-          await this.octokit.git.deleteRef({
-            owner: this.config.owner,
-            repo: this.config.repo,
-            ref: `heads/${pr.head.ref}`
+          if (pr.head && pr.head.ref) {
+            await this.deleteRef(pr.head.ref);
+          }
+
+          logger.info('Closed automated PR', {
+            number: pr.number,
+            branch: pr.head.ref
           });
         }
       }
     } catch (error) {
-      throw this.handleGitHubError(error, 'close auto PRs');
+      this.handleError('Failed to close automated PRs', error);
     }
   }
 
   /**
-   * Helper method to generate a unique branch name
-   * @param {string} prefix - Branch name prefix
-   * @returns {string} Unique branch name
+   * Generate a unique branch name
    */
-  generateBranchName(prefix = 'content-update') {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  generateBranchName(prefix = 'content-sync') {
+    const timestamp = new Date().toISOString()
+      .replace(/[:.]/g, '-')
+      .replace('T', '-')
+      .split('-')
+      .slice(0, 4)
+      .join('-');
     return `${prefix}-${timestamp}`;
+  }
+
+  /**
+   * Handle GitHub API errors with proper logging
+   */
+  handleError(message, error) {
+    let enhancedMessage = message;
+    
+    if (error.status === 401) {
+      enhancedMessage = `${message}: Authentication failed. Check your GITHUB_TOKEN.`;
+    } else if (error.status === 403) {
+      if (error.message.includes('rate limit')) {
+        enhancedMessage = `${message}: Rate limit exceeded. Please try again later.`;
+      } else {
+        enhancedMessage = `${message}: Permission denied. Check your token's permissions.`;
+      }
+    } else if (error.status === 404) {
+      enhancedMessage = `${message}: Resource not found. Check repository name and owner.`;
+    } else if (error.status === 422) {
+      enhancedMessage = `${message}: Validation failed. ${error.message}`;
+    }
+
+    logger.error(enhancedMessage, error, {
+      status: error.status,
+      message: error.message
+    });
+
+    throw new Error(enhancedMessage);
   }
 }
 

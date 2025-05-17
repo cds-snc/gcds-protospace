@@ -1,88 +1,95 @@
 const cheerio = require('cheerio');
-const titleToFilename = require('./utils/titleToFilename');
 const path = require('path');
-const fs = require('fs').promises;
+const titleToFilename = require('./utils/titleToFilename');
+const logger = require('./utils/logger');
 
 /**
- * Transforms GC-Articles content into Hugo Markdown format
- * @param {Object} article - Article object from GC-Articles
- * @param {string} lang - Language code (en/fr)
- * @param {string} translationKey - Unique key to link translations
- * @returns {Object} Hugo-compatible Markdown content with front matter and file path
+ * Transform GC-Articles content into Hugo Markdown format
  */
 function transformArticleToHugo(article, lang, translationKey) {
-  // Extract basic article metadata
-  const { title, publishDate, content } = article;
-  
-  // Extract image metadata if available
-  let imageMetadata = {};
-  if (article._embedded?.['wp:featuredmedia']?.[0]) {
-    const media = article._embedded['wp:featuredmedia'][0];
-    imageMetadata = {
-      image: media.media_details.sizes.full.source_url,
-      imageAlt: media.alt_text,
-      thumb: media.media_details.sizes.full.source_url
+  try {
+    // Extract article metadata
+    const { 
+      title, 
+      publishDate, 
+      content,
+      author,
+      slug,
+      excerpt
+    } = article;
+
+    // Extract featured image metadata if available
+    let imageMetadata = {};
+    if (article._embedded?.['wp:featuredmedia']?.[0]) {
+      const media = article._embedded['wp:featuredmedia'][0];
+      imageMetadata = {
+        image: media.source_url,
+        imageAlt: media.alt_text || title,
+        thumb: media.media_details?.sizes?.thumbnail?.source_url || media.source_url
+      };
+    }
+
+    // Generate Hugo front matter
+    const frontMatter = generateFrontMatter({
+      title: escapeYaml(title),
+      date: new Date(publishDate).toISOString(),
+      author: author ? escapeYaml(author.name) : '',
+      lang,
+      translationKey,
+      slug: escapeYaml(slug),
+      description: excerpt ? escapeYaml(excerpt) : '',
+      draft: false,
+      ...imageMetadata
+    });
+
+    // Transform content to Markdown
+    const markdownBody = transformContentToMarkdown(content);
+
+    // Generate file path
+    const filename = `${titleToFilename(title)}.md`;
+    const filePath = path.join('content', lang, filename);
+
+    logger.info('Transformed article content', {
+      title,
+      lang,
+      filePath
+    });
+
+    return {
+      content: `${frontMatter}\n\n${markdownBody}`,
+      filePath
     };
+
+  } catch (error) {
+    logger.error('Content transformation failed', error, {
+      articleId: article.id,
+      title: article.title,
+      lang
+    });
+    throw error;
   }
-
-  // Generate Hugo front matter
-  const frontMatter = generateFrontMatter({
-    title,
-    date: publishDate,
-    lang,
-    translationKey,
-    ...imageMetadata
-  });
-
-  // Transform content to Markdown
-  const markdownBody = transformContentToMarkdown(content);
-
-  // Generate file path
-  const filename = `${titleToFilename(title)}.md`;
-  const filePath = path.join('content', lang, filename);
-
-  // Return both the content and the file path
-  return {
-    content: `${frontMatter}\n${markdownBody}`,
-    filePath
-  };
 }
 
 /**
- * Generates Hugo front matter in YAML format
- * @param {Object} metadata - Article metadata
- * @returns {string} YAML front matter block
+ * Generate Hugo front matter in YAML format
  */
 function generateFrontMatter(metadata) {
-  // Create a normalized front matter object with all potential properties
-  const frontMatter = {
-    author: metadata.author || '',
-    date: metadata.date ? new Date(metadata.date).toISOString() : '',
-    draft: false,
-    image: metadata.image ? escapeYaml(metadata.image) : '',
-    imageAlt: metadata.imageAlt ? escapeYaml(metadata.imageAlt) : '',
-    lang: metadata.lang || 'en',
-    thumb: metadata.thumb ? escapeYaml(metadata.thumb) : '',
-    title: metadata.title ? escapeYaml(metadata.title) : '',
-    translationKey: metadata.translationKey || ''
-  };
-
-  // Create markdown with alphabetized front matter
   let output = '---\n';
   
   // Sort keys alphabetically and build front matter
-  Object.keys(frontMatter)
+  Object.keys(metadata)
     .sort()
     .forEach(key => {
-      const value = frontMatter[key];
+      const value = metadata[key];
+      
       // Only include properties that have values
       if (value !== undefined && value !== '') {
         if (typeof value === 'string' && value.includes('\n')) {
           // Multi-line string
-          output += `${key}: >-\n  '${value}'\n`;
+          output += `${key}: |-\n  ${value.replace(/\n/g, '\n  ')}\n`;
         } else {
           // Regular value (string, boolean, etc)
-          output += `${key}: ${typeof value === 'string' ? `'${value}'` : value}\n`;
+          output += `${key}: ${typeof value === 'string' ? `"${value}"` : value}\n`;
         }
       }
     });
@@ -92,18 +99,7 @@ function generateFrontMatter(metadata) {
 }
 
 /**
- * Escapes special characters in YAML values
- * @param {string} text - Text to escape
- * @returns {string} Escaped text
- */
-function escapeYaml(text) {
-  return text.replace(/"/g, '\\"');
-}
-
-/**
- * Transforms HTML content to Markdown with GCDS components
- * @param {string} content - HTML or block-based content
- * @returns {string} Markdown content
+ * Transform HTML content to Markdown with GCDS components
  */
 function transformContentToMarkdown(content) {
   // For HTML content
@@ -116,9 +112,7 @@ function transformContentToMarkdown(content) {
 }
 
 /**
- * Transforms HTML content to Markdown
- * @param {string} html - HTML content
- * @returns {string} Markdown content
+ * Transform HTML content to Markdown
  */
 function transformHtmlToMarkdown(html) {
   const $ = cheerio.load(html);
@@ -137,20 +131,51 @@ function transformHtmlToMarkdown(html) {
       case 'h3':
         markdown += `### ${$el.text()}\n\n`;
         break;
+      case 'h4':
+        markdown += `#### ${$el.text()}\n\n`;
+        break;
       case 'p':
         markdown += `${$el.text()}\n\n`;
         break;
+      case 'a':
+        const href = $el.attr('href');
+        markdown += `[${$el.text()}](${href})\n\n`;
+        break;
+      case 'ul':
+        $el.find('li').each((_, li) => {
+          markdown += `- ${$(li).text()}\n`;
+        });
+        markdown += '\n';
+        break;
+      case 'ol':
+        $el.find('li').each((i, li) => {
+          markdown += `${i + 1}. ${$(li).text()}\n`;
+        });
+        markdown += '\n';
+        break;
+      case 'img':
+        const src = $el.attr('src');
+        const alt = $el.attr('alt') || '';
+        markdown += `![${alt}](${src})\n\n`;
+        break;
       case 'gcds-button':
-        // Transform GCDS button to Hugo shortcode
+        const buttonHref = $el.attr('href') || '';
         const buttonText = $el.text();
-        const href = $el.attr('href') || '';
-        markdown += `{{< gcds-button href="${href}" >}}${buttonText}{{< /gcds-button >}}\n\n`;
+        markdown += `{{< gcds-button href="${buttonHref}" >}}${buttonText}{{< /gcds-button >}}\n\n`;
         break;
       case 'gcds-alert':
-        // Transform GCDS alert to Hugo shortcode
         const alertType = $el.attr('type') || 'info';
         const alertContent = $el.html();
         markdown += `{{< gcds-alert type="${alertType}" >}}${alertContent}{{< /gcds-alert >}}\n\n`;
+        break;
+      case 'blockquote':
+        markdown += `> ${$el.text()}\n\n`;
+        break;
+      case 'code':
+        markdown += `\`${$el.text()}\`\n\n`;
+        break;
+      case 'pre':
+        markdown += `\`\`\`\n${$el.text()}\n\`\`\`\n\n`;
         break;
     }
   });
@@ -159,9 +184,7 @@ function transformHtmlToMarkdown(html) {
 }
 
 /**
- * Transforms block-based content to Markdown
- * @param {Array} blocks - Array of content blocks
- * @returns {string} Markdown content
+ * Transform block-based content to Markdown
  */
 function transformBlocksToMarkdown(blocks) {
   return blocks.map(block => {
@@ -173,6 +196,12 @@ function transformBlocksToMarkdown(blocks) {
       case 'paragraph':
         return `${block.content}\n\n`;
       
+      case 'list':
+        return block.items.map(item => `${block.ordered ? '1.' : '-'} ${item}\n`).join('') + '\n';
+      
+      case 'image':
+        return `![${block.alt || ''}](${block.url})\n\n`;
+      
       case 'gcds-button':
         return `{{< gcds-button href="${block.href}" >}}${block.text}{{< /gcds-button >}}\n\n`;
       
@@ -183,6 +212,17 @@ function transformBlocksToMarkdown(blocks) {
         return '';
     }
   }).join('');
+}
+
+/**
+ * Escape special characters in YAML values
+ */
+function escapeYaml(text) {
+  if (!text) return '';
+  return text
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, ' ')
+    .trim();
 }
 
 module.exports = {

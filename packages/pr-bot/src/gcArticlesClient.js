@@ -1,23 +1,46 @@
 const axios = require('axios');
+const logger = require('./utils/logger');
 
 class GCArticlesClient {
   constructor() {
-    this.baseURL = process.env.GC_ARTICLES_API_URL;
-    this.auth = {
-      username: process.env.GC_ARTICLES_API_USERNAME,
-      password: process.env.GC_ARTICLES_API_PASSWORD,
-    };
+    const {
+      GC_ARTICLES_API_URL: baseURL,
+      GC_ARTICLES_API_USERNAME: username,
+      GC_ARTICLES_API_PASSWORD: password
+    } = process.env;
+
+    if (!baseURL || !username || !password) {
+      throw new Error('Missing required GC Articles API configuration');
+    }
+
+    this.baseURL = baseURL;
+    this.auth = { username, password };
+    this.client = axios.create({
+      baseURL,
+      auth: this.auth,
+      timeout: 10000
+    });
   }
 
+  /**
+   * Fetch posts for a specific language
+   */
   async getPosts(lang = 'en') {
     try {
-      const response = await axios.get(`${this.baseURL}/posts`, {
+      const response = await this.client.get('/posts', {
         params: {
-          lang: lang,
-          _embed: 'wp:featuredmedia'
-        },
-        auth: this.auth,
+          lang,
+          _embed: 'wp:featuredmedia',
+          per_page: 100, // Adjust based on needs
+          status: 'publish'
+        }
       });
+
+      logger.info('Retrieved posts from GC-Articles', {
+        lang,
+        count: response.data.length
+      });
+
       return response.data;
     } catch (error) {
       this.handleError(`Failed to fetch ${lang} posts`, error);
@@ -26,33 +49,45 @@ class GCArticlesClient {
   }
 
   /**
-   * Fetches both English and French versions of posts
-   * @returns {Promise<{en: Array, fr: Array}>} Object containing posts in both languages
+   * Fetch both English and French posts
    */
   async getBilingualPosts() {
     try {
+      logger.info('Fetching bilingual posts from GC-Articles');
+
       const [enPosts, frPosts] = await Promise.all([
         this.getPosts('en'),
         this.getPosts('fr')
       ]);
-      
-      return {
-        en: enPosts,
-        fr: frPosts
-      };
+
+      return { en: enPosts, fr: frPosts };
     } catch (error) {
       this.handleError('Failed to fetch bilingual posts', error);
       throw error;
     }
   }
 
+  /**
+   * Handle API errors with proper logging
+   */
   handleError(message, error) {
-    console.error(`${message}:`, {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      message: error.message,
-      url: error.config?.url,
+    const status = error.response?.status;
+    const statusText = error.response?.statusText;
+    const url = error.config?.url;
+
+    logger.error(message, error, {
+      status,
+      statusText,
+      url
     });
+
+    // Enhance error message with API details
+    const enhancedMessage = `${message}: ${status} ${statusText}`;
+    const enhancedError = new Error(enhancedMessage);
+    enhancedError.originalError = error;
+    enhancedError.status = status;
+    
+    throw enhancedError;
   }
 }
 
