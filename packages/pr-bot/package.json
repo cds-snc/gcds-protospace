@@ -1,0 +1,19 @@
+{
+  "name": "@gcds/pr-bot",
+  "version": "0.1.0",
+  "description": "PR Bot for managing GC-Articles content synchronization",
+  "main": "src/index.js",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node -r dotenv/config src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
