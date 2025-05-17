@@ -1,11 +1,16 @@
 const cheerio = require('cheerio');
+const titleToFilename = require('./utils/titleToFilename');
+const path = require('path');
+const fs = require('fs').promises;
 
 /**
  * Transforms GC-Articles content into Hugo Markdown format
  * @param {Object} article - Article object from GC-Articles
- * @returns {string} Hugo-compatible Markdown content with front matter
+ * @param {string} lang - Language code (en/fr)
+ * @param {string} translationKey - Unique key to link translations
+ * @returns {Object} Hugo-compatible Markdown content with front matter and file path
  */
-function transformArticleToHugo(article) {
+function transformArticleToHugo(article, lang, translationKey) {
   // Extract basic article metadata
   const { title, publishDate, content } = article;
   
@@ -24,14 +29,23 @@ function transformArticleToHugo(article) {
   const frontMatter = generateFrontMatter({
     title,
     date: publishDate,
+    lang,
+    translationKey,
     ...imageMetadata
   });
 
   // Transform content to Markdown
   const markdownBody = transformContentToMarkdown(content);
 
-  // Combine front matter and body
-  return `${frontMatter}\n${markdownBody}`;
+  // Generate file path
+  const filename = `${titleToFilename(title)}.md`;
+  const filePath = path.join('content', lang, filename);
+
+  // Return both the content and the file path
+  return {
+    content: `${frontMatter}\n${markdownBody}`,
+    filePath
+  };
 }
 
 /**
@@ -42,13 +56,15 @@ function transformArticleToHugo(article) {
 function generateFrontMatter(metadata) {
   // Create a normalized front matter object with all potential properties
   const frontMatter = {
-    author: post.meta?.gc_author_name || '',
+    author: metadata.author || '',
     date: metadata.date ? new Date(metadata.date).toISOString() : '',
     draft: false,
     image: metadata.image ? escapeYaml(metadata.image) : '',
     imageAlt: metadata.imageAlt ? escapeYaml(metadata.imageAlt) : '',
+    lang: metadata.lang || 'en',
     thumb: metadata.thumb ? escapeYaml(metadata.thumb) : '',
-    title: metadata.title ? escapeYaml(metadata.title) : ''
+    title: metadata.title ? escapeYaml(metadata.title) : '',
+    translationKey: metadata.translationKey || ''
   };
 
   // Create markdown with alphabetized front matter
@@ -72,6 +88,7 @@ function generateFrontMatter(metadata) {
     });
   
   output += '---';
+  return output;
 }
 
 /**
