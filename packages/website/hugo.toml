@@ -1,24 +1,24 @@
 baseURL = 'https://test.canada.ca/gcds-protospace/'
-theme = '../theme' # Updated theme path for monorepo
-defaultContentLanguage = 'en-ca'
+theme = '../hugo-gcds-theme' # Using the correct theme package
+DefaultContentLanguage = "en"    # Note the capitalization
 defaultContentLanguageInSubdir = true
+hasCJKLanguage = false
+removePathAccents = true
 
-[languages.en-ca]
-languageName = "English"
+[languages.en]
 contentDir = "content/en"
+languageName = "English"
 title = "GCDS Protospace"
 weight = 1
-languageCode = "en-ca"
+
+[languages.fr]
+contentDir = "content/fr"
+languageName = "Français"
+title = "Espace de prototypage du SDGC"
+weight = 2
 
 [languages.en.params]
 description = "An open-source prototyping space on GitHub will let us experiment with the GC Design System (GCDS) in a way that's fast, secure, and fully aligned with Government of Canada Digital Standards."
-
-[languages.fr-ca]
-languageName = "Français"
-contentDir = "content/fr"
-title = "Espace de prototypage du SDGC"
-weight = 2
-languageCode = "fr-ca"
 
 [languages.fr.params]
 description = "Un espace de prototypage à code source ouvert sur GitHub nous permettra d'expérimenter avec le Système de conception GC (SDGC) d'une manière rapide, sécurisée et entièrement alignée sur les normes numériques du gouvernement du Canada."

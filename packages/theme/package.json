@@ -1,8 +1,0 @@
-{
-  "name": "@gcds-protospace/theme",
-  "version": "1.0.0",
-  "description": "Hugo theme for GCDS Protospace",
-  "scripts": {
-    "clean": "echo 'No clean task needed for theme'"
-  }
-}

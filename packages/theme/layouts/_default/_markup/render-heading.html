@@ -1,5 +1,0 @@
-{{- if and (ge .Level 1) (le .Level 6) -}}
-  <gcds-heading tag="h{{ .Level }}" id="{{ .Anchor | safeURL }}">{{ .Text | safeHTML }}</gcds-heading>
-{{- else -}}
-  <h{{ .Level }} id="{{ .Anchor | safeURL }}">{{ .Text | safeHTML }}</h{{ .Level }}>
-{{- end -}}

@@ -1,8 +1,0 @@
-{{ define "main" }}
-  <gcds-heading tag="h1">{{ .Title }}</gcds-heading>
-  {{ .Content }}
-  {{ range .Pages }}
-    <gcds-heading tag="h2"><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></gcds-heading>
-    {{ .Summary }}
-  {{ end }}
-{{ end }}

@@ -12,6 +12,9 @@ test.tf
 terraform/*.tfvars
 *.tfstate*
 
+# Hugo build output
+**/public/
+
 # macOS system files
 .DS_Store
 
@@ -23,3 +26,10 @@ rds_activity_stream/lambda/*.zip
 .github/workflows/conftest/policy
 .vscode/settings.json
 **/.terraform/providers/
+
+# Backup files
+*.bak
+
+# Build artifacts
+dist/
+build/

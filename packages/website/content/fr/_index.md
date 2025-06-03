@@ -26,7 +26,7 @@ Cet espace est conçu pour les concepteurs de contenu qui souhaitent explorer et
 
 Le système de design GC offre une variété de composants que vous pouvez utiliser dans votre contenu :
 
-- Boutons {{% button type="primary" %}}Comme ceci{{% /button %}}
+- Boutons {{% gcds-button type="primary" %}}Comme ceci{{% /gcds-button %}}
 - Liens avec différents styles
 - Composants d'alerte pour les messages importants
 - Et bien plus encore !
