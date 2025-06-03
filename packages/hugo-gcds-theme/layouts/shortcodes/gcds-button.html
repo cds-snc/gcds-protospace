@@ -1,0 +1,9 @@
+<gcds-button
+    {{- with (.Get "button-type") }} button-type="{{ . }}"{{ end }}
+    {{- with (.Get "type") }} type="{{ . }}"{{ end }}
+    {{- with (.Get "size") }} size="{{ . }}"{{ end }}
+    {{- with (.Get "href") }} href="{{ . }}"{{ end }}
+    {{- with (.Get "target") }} target="{{ . }}"{{ end }}
+>
+    {{ .Inner }}
+</gcds-button>

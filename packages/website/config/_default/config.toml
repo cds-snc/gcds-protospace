@@ -1,0 +1,6 @@
+baseURL = "http://localhost:1313/"
+languageCode = "en-ca"
+defaultContentLanguage = "en-ca"
+title = "GCDS Protospace"
+theme = "../../hugo-gcds-theme"
+publishDir = "public"

@@ -1,145 +1,230 @@
-/**
- * Script to fetch and transform bilingual content from GC-Articles endpoints
- * Uses native fetch API available in Node.js 18+
- * Converts API content to markdown files with alphabetized front matter
- */
+const cheerio = require('cheerio');
+const path = require('path');
 const titleToFilename = require('./utils/titleToFilename');
+const logger = require('./utils/logger');
 
 /**
- * Generates markdown content with alphabetized front matter from GC-Article data
- * @param {Object} post - Post data from GC-Article endpoint
- * @param {string} lang - Language code ('en' or 'fr')
- * @returns {string} - Markdown content with front matter
+ * Transform GC-Articles content into Hugo Markdown format
  */
-const generateMarkdownContent = async (post, lang) => {
-  // Replace HTML entities in title
-  const cleanTitle = post.title.rendered.replace(/&#8217;/g, "'").replace(/&amp;/g, "&");
-  
-  // Create frontmatter object with all properties
-  const frontMatter = {
-    author: post.meta?.gc_author_name || '',
-    date: post.date,
-    description: post.markdown?.excerpt?.rendered || '',
-    lang: lang,
-    title: cleanTitle,
-    // Use post.translationKey if available, otherwise fall back to slug
-    translationKey: post.translationKey || post.slug
-  };
+function transformArticleToHugo(article, lang, translationKey) {
+  try {
+    // Extract article metadata
+    const { 
+      title, 
+      publishDate, 
+      content,
+      author,
+      slug,
+      excerpt
+    } = article;
 
-  // Add image properties if available
-  if (post._embedded?.['wp:featuredmedia']) {
-    const media = post._embedded['wp:featuredmedia'][0];
-    frontMatter.image = media.media_details.sizes.full.source_url;
-    frontMatter.imageAlt = media.alt_text;
-    frontMatter.thumb = media.media_details.sizes.full.source_url;
+    // Extract featured image metadata if available
+    let imageMetadata = {};
+    if (article._embedded?.['wp:featuredmedia']?.[0]) {
+      const media = article._embedded['wp:featuredmedia'][0];
+      imageMetadata = {
+        image: media.source_url,
+        imageAlt: media.alt_text || title,
+        thumb: media.media_details?.sizes?.thumbnail?.source_url || media.source_url
+      };
+    }
+
+    // Generate Hugo front matter
+    const frontMatter = generateFrontMatter({
+      title: escapeYaml(title),
+      date: new Date(publishDate).toISOString(),
+      author: author ? escapeYaml(author.name) : '',
+      lang,
+      translationKey,
+      slug: escapeYaml(slug),
+      description: excerpt ? escapeYaml(excerpt) : '',
+      draft: false,
+      ...imageMetadata
+    });
+
+    // Transform content to Markdown
+    const markdownBody = transformContentToMarkdown(content);
+
+    // Generate file path
+    const filename = `${titleToFilename(title)}.md`;
+    const filePath = path.join('content', lang, filename);
+
+    logger.info('Transformed article content', {
+      title,
+      lang,
+      filePath
+    });
+
+    return {
+      content: `${frontMatter}\n\n${markdownBody}`,
+      filePath
+    };
+
+  } catch (error) {
+    logger.error('Content transformation failed', error, {
+      articleId: article.id,
+      title: article.title,
+      lang
+    });
+    throw error;
   }
+}
 
-  // Create markdown with alphabetized front matter
+/**
+ * Generate Hugo front matter in YAML format
+ */
+function generateFrontMatter(metadata) {
   let output = '---\n';
   
   // Sort keys alphabetically and build front matter
-  Object.keys(frontMatter)
+  Object.keys(metadata)
     .sort()
     .forEach(key => {
-      const value = frontMatter[key];
-      if (value) {
-        if (key === 'description') {
-          // Multi-line description
-          output += `${key}: >-\n  '${value}'\n`;
+      const value = metadata[key];
+      
+      // Only include properties that have values
+      if (value !== undefined && value !== '') {
+        if (typeof value === 'string' && value.includes('\n')) {
+          // Multi-line string
+          output += `${key}: |-\n  ${value.replace(/\n/g, '\n  ')}\n`;
         } else {
-          // Regular string value
-          output += `${key}: '${value}'\n`;
+          // Regular value (string, boolean, etc)
+          output += `${key}: ${typeof value === 'string' ? `"${value}"` : value}\n`;
         }
       }
     });
   
-  output += '---\n';
-  output += `${post.content.rendered}\n`;
-
+  output += '---';
   return output;
-};
+}
 
 /**
- * Fetches and processes bilingual content from GC-Article endpoints
- * @returns {Promise<Object>} - Object containing English and French content
+ * Transform HTML content to Markdown with GCDS components
  */
-const fetchBilingualContent = async () => {
-  try {
-    // Get endpoint URLs from environment variables
-    const enEndpoint = process.env.GC_ARTICLES_ENDPOINT_EN;
-    const frEndpoint = process.env.GC_ARTICLES_ENDPOINT_FR;
-
-    if (!enEndpoint || !frEndpoint) {
-      throw new Error('Missing endpoint configuration for one or both languages');
-    }
-
-    // Fetch content from both endpoints
-    const [enResponse, frResponse] = await Promise.all([
-      fetch(`${enEndpoint}posts?markdown=true&_embed`),
-      fetch(`${frEndpoint}posts?markdown=true&_embed`)
-    ]);
-
-    if (!enResponse.ok || !frResponse.ok) {
-      throw new Error(`HTTP error! EN status: ${enResponse.status}, FR status: ${frResponse.status}`);
-    }
-
-    const enData = await enResponse.json();
-    const frData = await frResponse.json();
-
-    if (!Array.isArray(enData) || !Array.isArray(frData)) {
-      throw new Error('Expected array of posts from API');
-    }
-
-    // Process English content
-    const enContent = await Promise.all(enData.map(async post => {
-      const content = await generateMarkdownContent(post, 'en');
-      const fileName = titleToFilename(post.title.rendered);
-      return { 
-        body: content, 
-        fileName: `en/${fileName}.md`,
-        slug: post.slug
-      };
-    }));
-
-    // Process French content
-    const frContent = await Promise.all(frData.map(async post => {
-      const content = await generateMarkdownContent(post, 'fr');
-      const fileName = titleToFilename(post.title.rendered);
-      return { 
-        body: content, 
-        fileName: `fr/${fileName}.md`,
-        slug: post.slug
-      };
-    }));
-
-    return {
-      en: enContent,
-      fr: frContent
-    };
-  } catch (error) {
-    console.error('Failed to fetch bilingual content:', error);
-    throw error;
+function transformContentToMarkdown(content) {
+  // For HTML content
+  if (typeof content === 'string') {
+    return transformHtmlToMarkdown(content);
   }
-};
+  
+  // For block-based content
+  return transformBlocksToMarkdown(content);
+}
 
 /**
- * Main function to fetch, process and prepare bilingual content from GC-Articles
- * @returns {Promise<Array>} - Array of objects containing file content and fileName
+ * Transform HTML content to Markdown
  */
-const processBilingualContent = async () => {
-  try {
-    // Fetch content from endpoints
-    const content = await fetchBilingualContent();
+function transformHtmlToMarkdown(html) {
+  const $ = cheerio.load(html);
+  let markdown = '';
 
-    // Combine all content files into a single array
-    return [
-      ...content.en,
-      ...content.fr
-    ];
-  } catch (error) {
-    console.error('Failed to process bilingual content:', error);
-    throw error;
-  }
+  $('*').each((_, element) => {
+    const $el = $(element);
+    
+    switch (element.tagName) {
+      case 'h1':
+        markdown += `# ${$el.text()}\n\n`;
+        break;
+      case 'h2':
+        markdown += `## ${$el.text()}\n\n`;
+        break;
+      case 'h3':
+        markdown += `### ${$el.text()}\n\n`;
+        break;
+      case 'h4':
+        markdown += `#### ${$el.text()}\n\n`;
+        break;
+      case 'p':
+        markdown += `${$el.text()}\n\n`;
+        break;
+      case 'a':
+        const href = $el.attr('href');
+        markdown += `[${$el.text()}](${href})\n\n`;
+        break;
+      case 'ul':
+        $el.find('li').each((_, li) => {
+          markdown += `- ${$(li).text()}\n`;
+        });
+        markdown += '\n';
+        break;
+      case 'ol':
+        $el.find('li').each((i, li) => {
+          markdown += `${i + 1}. ${$(li).text()}\n`;
+        });
+        markdown += '\n';
+        break;
+      case 'img':
+        const src = $el.attr('src');
+        const alt = $el.attr('alt') || '';
+        markdown += `![${alt}](${src})\n\n`;
+        break;
+      case 'gcds-button':
+        const buttonHref = $el.attr('href') || '';
+        const buttonText = $el.text();
+        markdown += `{{< gcds-button href="${buttonHref}" >}}${buttonText}{{< /gcds-button >}}\n\n`;
+        break;
+      case 'gcds-alert':
+        const alertType = $el.attr('type') || 'info';
+        const alertContent = $el.html();
+        markdown += `{{< gcds-alert type="${alertType}" >}}${alertContent}{{< /gcds-alert >}}\n\n`;
+        break;
+      case 'blockquote':
+        markdown += `> ${$el.text()}\n\n`;
+        break;
+      case 'code':
+        markdown += `\`${$el.text()}\`\n\n`;
+        break;
+      case 'pre':
+        markdown += `\`\`\`\n${$el.text()}\n\`\`\`\n\n`;
+        break;
+    }
+  });
+
+  return markdown.trim();
+}
+
+/**
+ * Transform block-based content to Markdown
+ */
+function transformBlocksToMarkdown(blocks) {
+  return blocks.map(block => {
+    switch (block.type) {
+      case 'heading':
+        const level = '#'.repeat(block.level || 1);
+        return `${level} ${block.content}\n\n`;
+      
+      case 'paragraph':
+        return `${block.content}\n\n`;
+      
+      case 'list':
+        return block.items.map(item => `${block.ordered ? '1.' : '-'} ${item}\n`).join('') + '\n';
+      
+      case 'image':
+        return `![${block.alt || ''}](${block.url})\n\n`;
+      
+      case 'gcds-button':
+        return `{{< gcds-button href="${block.href}" >}}${block.text}{{< /gcds-button >}}\n\n`;
+      
+      case 'gcds-alert':
+        return `{{< gcds-alert type="${block.alertType}" >}}${block.content}{{< /gcds-alert >}}\n\n`;
+      
+      default:
+        return '';
+    }
+  }).join('');
+}
+
+/**
+ * Escape special characters in YAML values
+ */
+function escapeYaml(text) {
+  if (!text) return '';
+  return text
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, ' ')
+    .trim();
+}
+
+module.exports = {
+  transformArticleToHugo
 };
-
-module.exports = processBilingualContent;

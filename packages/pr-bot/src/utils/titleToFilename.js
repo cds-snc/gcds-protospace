@@ -1,17 +1,17 @@
 /**
- * Converts a title to a URL-friendly filename (slug).
- * Supports English and French (accent normalization).
- * @param { string } title - Title to convert to filename
- * @return { string } URL-friendly filename
+ * Converts a title to a Hugo-friendly filename
+ * @param {string} title - The title to convert
+ * @returns {string} The converted filename (without extension)
  */
-function titleToFilename( title ) {
+function titleToFilename(title) {
   return title
-    .normalize( 'NFD' ) // Decompose accented characters
-    .replace( /[\u0300-\u036f]/g, '' ) // Remove accents
-    .toLowerCase()
-    .replace( /[^a-z0-9\s-]/g, '' ) // Remove invalid chars
-    .trim()
-    .replace( /[\s_-]+/g, '-' ) // Collapse whitespace and underscores to hyphen
-    .replace( /^-+|-+$/g, '' ); // Trim leading/trailing hyphens
+    .toLowerCase() // Convert to lowercase
+    .normalize('NFD') // Normalize Unicode characters
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .trim() // Remove leading/trailing spaces
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-'); // Replace multiple hyphens with single hyphen
 }
+
 module.exports = titleToFilename;

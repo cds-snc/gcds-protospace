@@ -1,28 +1,23 @@
 {
-  "name": "pr-bot",
-  "version": "1.0.0",
-  "description": "PR Bot to fetch content from GC-Articles for GCDS Protospace",
-  "main": "dist/index.js",
-  "type": "commonjs",
+  "name": "@gcds/pr-bot",
+  "version": "0.1.0",
+  "description": "PR Bot for managing GC-Articles content synchronization",
+  "main": "src/index.js",
+  "private": true,
   "scripts": {
-    "build": "tsc",
-    "dev": "ts-node-dev --respawn src/index.ts",
-    "start": "node dist/index.js",
-    "clean": "rm -rf dist"
+    "start": "node src/index.js",
+    "dev": "node -r dotenv/config src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@octokit/rest": "^20.0.2",
-    "dotenv": "^16.4.1",
-    "node-fetch": "^2.7.0",
-    "js-base64": "^3.7.5",
-    "lru-cache": "^10.0.0"
+    "@octokit/rest": "^21.1.1",
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
+    "winston": "^3.17.0",
+    "yaml": "^2.8.0"
   },
-  "devDependencies": {
-    "@types/node": "^20.11.16",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3",
-    "rimraf": "^5.0.1", 
-    "glob": "^10.3.10"
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

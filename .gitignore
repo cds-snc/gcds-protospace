@@ -1,42 +1,24 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+node_modules/
+.env
+**/.terragrunt-cache
+!.devcontainer/Dockerfile
+
+# Local testing files and directories
+.tool-versions
+.terraform*
+!.terraform-docs.yml
+!terraform/.terraform.lock.hcl
+test.tf
+terraform/*.tfvars
+*.tfstate*
+
+# macOS system files
 .DS_Store
 
-# Test binary, built with `go test -c`
-*.test
+# Lambda build artifacts
+rds_activity_stream/lambda/layer
+rds_activity_stream/lambda/*.zip
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories
-node_modules/
-vendor/
-_temp/
-
-# Go workspace file
-go.work
-go.work.sum
-
-# Hugo build outputs
-public/
-resources/
-.hugo_build.lock
-
-# Build outputs
-dist/
-build/
-
-# Environment files
-.env
-.env.*
-!.env.example
-
-# Editor configs that should be local
-.hintrc
+# GitHub workflow files
+.github/workflows/conftest/policy
+.vscode/settings.json

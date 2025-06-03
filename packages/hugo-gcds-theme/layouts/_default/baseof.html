@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.Language.Lang }}" dir="{{ .Site.Language.LanguageDirection }}">
+<head>
+  {{ partial "head.html" . }}
+</head>
+<body>
+  {{ $currentLang := .Language.Lang }}
+  {{ $section := cond (eq $currentLang "en") "en" "fr" }}
+
+  {{ partial "header.html" . }}
+  <gcds-container
+      id="main-content"
+      main-container
+      size="xl"
+      centered
+      tag="main"
+    >
+      {{ block "main" . }}{{ end }}
+      <gcds-date-modified>
+        {{ with .Date }}{{ .Format "2006-01-02" }}{{ end }}
+      </gcds-date-modified>
+  </gcds-container>
+  {{ partial "footer.html" . }}
+</body>
+</html>
