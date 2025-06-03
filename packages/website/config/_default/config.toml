@@ -1,6 +1,20 @@
-baseURL = "http://localhost:1313/"
-languageCode = "en-ca"
-defaultContentLanguage = "en-ca"
+baseURL = "https://test.canada.ca/gcds-protospace/"
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir = true
+
 title = "GCDS Protospace"
 theme = "../../hugo-gcds-theme"
 publishDir = "public"
+
+[languages]
+  [languages.en]
+    languageName = "English"
+    contentDir = "content/en"
+    title = "GCDS Protospace"
+    weight = 1
+
+  [languages.fr]
+    languageName = "Français"
+    contentDir = "content/fr"
+    title = "Espace de prototypage du SDGC"
+    weight = 2
