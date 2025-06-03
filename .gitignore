@@ -26,6 +26,7 @@ rds_activity_stream/lambda/*.zip
 .github/workflows/conftest/policy
 .vscode/settings.json
 **/.terraform/providers/
+.github/copilot-instructions.md
 
 # Backup files
 *.bak
