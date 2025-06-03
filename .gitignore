@@ -22,3 +22,4 @@ rds_activity_stream/lambda/*.zip
 # GitHub workflow files
 .github/workflows/conftest/policy
 .vscode/settings.json
+**/.terraform/providers/
