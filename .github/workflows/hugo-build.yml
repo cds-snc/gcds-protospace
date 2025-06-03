@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'packages/website/**'
-      - 'packages/theme/**'
+      - 'packages/hugo-gcds-theme/**'
   # Allow manual triggering
   workflow_dispatch:
 
