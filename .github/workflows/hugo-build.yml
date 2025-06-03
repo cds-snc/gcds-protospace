@@ -37,8 +37,9 @@ jobs:
         run: cd packages/website && hugo --minify
 
       - name: Upload build artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
+          name: hugo-build
           path: packages/website/public
 
   deploy:
@@ -54,12 +55,10 @@ jobs:
           aws-region: ca-central-1
 
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: github-pages
-
-      - name: Extract artifact
-        run: tar -xf artifact.tar
+          name: hugo-build
+          path: packages/website/public
 
       - name: Deploy to S3
         run: |

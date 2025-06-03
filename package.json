@@ -2,6 +2,9 @@
   "name": "gcds-protospace-monorepo",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "workspaces": [
     "packages/*"
   ],
@@ -15,9 +18,7 @@
     "dev:all": "concurrently \"npm run dev:website\" \"npm run dev:pr-bot\"",
     "clean": "npm run clean:website && npm run clean:pr-bot",
     "clean:website": "cd packages/website && rm -rf public resources",
-    "clean:pr-bot": "cd packages/pr-bot && npm run clean",
-    "postinstall": "npm run install:pr-bot",
-    "install:pr-bot": "cd packages/pr-bot && npm install"
+    "clean:pr-bot": "cd packages/pr-bot && npm run clean"
   },
   "devDependencies": {
     "@types/node-fetch": "^2.6.12",
