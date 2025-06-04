@@ -1,6 +1,7 @@
 inputs = {
-  account_id      = "730335533085"
+  account_id      = "992382783569"
   env             = "staging"
   billing_code    = "gcds-protospace"
-  website_domains = ["test.canada.ca/gcds-protospace/en", "test.canada.ca/gcds-protospace/fr"]
+  website_domain  = "protospace.cdssandbox.xyz"
+  region          = "ca-central-1"
 }
