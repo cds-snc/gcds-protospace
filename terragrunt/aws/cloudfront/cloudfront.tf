@@ -1,45 +1,83 @@
-resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
-  comment = "cloudfront origin access identity"
+#
+# Cloudfront distribution using the static website S3 bucket as its origin
+#
+
+resource "aws_cloudfront_origin_access_identity" "simple_static_website" {
+  comment = "Allow CloudFront to reach the S3 bucket for domain ${var.domain_name_source}"
 }
 
-resource "aws_cloudfront_distribution" "distribution" {
-  for_each            = var.s3_bucket_regional_domain_name
-  default_root_object = "index.html"
-  enabled             = true
-  aliases             = [each.key]
-  price_class         = "PriceClass_All"
-  web_acl_id          = aws_wafv2_web_acl.cds_website_waf.arn
+resource "aws_cloudfront_distribution" "simple_static_website" {
+  http_version = "http2"
 
-  default_cache_behavior {
-    target_origin_id       = each.value
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods = [
-      "GET",
-      "HEAD",
-    ]
-    compress                   = true
-    cache_policy_id            = local.cloudfront_cache_policy_optimized
-    origin_request_policy_id   = local.cloudfront_origin_request_policy_cors_s3origin
-    response_headers_policy_id = local.cloudfront_response_headers_policy_cors_preflight
+  origin {
+    domain_name = aws_s3_bucket.this.bucket_regional_domain_name
+    origin_id   = "simple_static_website"
 
-    function_association {
-      event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.loadIndexFiles.arn
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.simple_static_website.cloudfront_access_identity_path
     }
   }
 
-  custom_error_response {
-    error_caching_min_ttl = 3600
-    response_code         = 404
-    error_code            = 404
-    response_page_path    = "/404.html"
+  default_root_object = var.index_document
+
+  enabled     = true
+  aliases     = [var.domain_name_source]
+  price_class = var.cloudfront_price_class
+
+  default_cache_behavior {
+    target_origin_id = "simple_static_website"
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    compress         = true
+
+    forwarded_values {
+      query_string = var.cloudfront_query_string_forwarding
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    dynamic "lambda_function_association" {
+      for_each = var.lambda_function_association
+
+      content {
+        event_type   = lookup(lambda_function_association.value, "event_type", null)
+        include_body = lookup(lambda_function_association.value, "include_body", false)
+        lambda_arn   = lookup(lambda_function_association.value, "lambda_arn", null)
+      }
+    }
+
+    # Function association 
+    dynamic "function_association" {
+      for_each = var.function_association
+
+      content {
+        event_type   = lookup(function_association.value, "event_type", null)
+        function_arn = lookup(function_association.value, "function_arn", null)
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 86400
+    max_ttl                = 86400
   }
-  origin {
-    domain_name = each.value
-    origin_id   = each.value
-    s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path
+
+  dynamic "custom_error_response" {
+    for_each = var.single_page_app ? [
+      {
+        error_code            = 403,
+        response_page_path    = "/${var.index_document}",
+        error_caching_min_ttl = 300,
+        response_code         = 200
+      }
+    ] : var.custom_error_responses
+    content {
+      error_code            = custom_error_response.value.error_code
+      error_caching_min_ttl = custom_error_response.value.error_caching_min_ttl != null ? custom_error_response.value.error_caching_min_ttl : 300
+      response_code         = custom_error_response.value.response_code != null ? custom_error_response.value.response_code : 200
+      response_page_path    = custom_error_response.value.response_page_path
     }
   }
 
@@ -47,30 +85,15 @@ resource "aws_cloudfront_distribution" "distribution" {
     geo_restriction {
       restriction_type = "none"
     }
-
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.cds_website_certificate[each.key].arn
-    minimum_protocol_version = "TLSv1.2_2021"
+    acm_certificate_arn      = local.acm_certificate_arn
     ssl_support_method       = "sni-only"
-  }
-  logging_config {
-    include_cookies = false
-    bucket          = module.log_bucket.s3_bucket_domain_name
-    prefix          = "cloudfront"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
-  tags = {
-    CostCentre = var.billing_code
-    Terraform  = true
-  }
-}
+  web_acl_id = var.web_acl_arn
 
-resource "aws_cloudfront_function" "loadIndexFiles" {
-  name    = "loadIndexFiles"
-  runtime = "cloudfront-js-1.0"
-  comment = "my function"
-  publish = true
-  code    = file("${path.module}/function.js")
+  tags = local.common_tags
 }
