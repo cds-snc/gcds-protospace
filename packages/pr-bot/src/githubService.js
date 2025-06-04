@@ -1,5 +1,5 @@
-const { Octokit } = require('@octokit/rest');
-const logger = require('./utils/logger');
+import { Octokit } from '@octokit/rest';
+import { logger } from './utils/logger';
 
 class GitHubService {
   constructor() {
@@ -216,4 +216,4 @@ class GitHubService {
   }
 }
 
-module.exports = GitHubService;
+export { GitHubService };

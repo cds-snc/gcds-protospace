@@ -1,13 +1,13 @@
-require('dotenv').config();
-const GCArticlesClient = require('./gcArticlesClient');
-const GitHubService = require('./githubService');
-const { transformArticleToHugo } = require('./fetch-transform-content');
-const ContentValidator = require('./utils/contentValidator');
-const ContentHashStore = require('./utils/contentHashStore');
-const logger = require('./utils/logger');
-const path = require('path');
-const fs = require('fs').promises;
-const crypto = require('crypto');
+import 'dotenv/config';
+import { GCArticlesClient } from './gcArticlesClient.js';
+import { GitHubService } from './githubService.js';
+import { transformArticleToHugo } from './fetch-transform-content.js';
+import { ContentValidator } from './utils/contentValidator.js';
+import { ContentHashStore } from './utils/contentHashStore.js';
+import { logger } from './utils/logger.js';
+import path from 'path';
+import { promises as fs } from 'fs';
+import crypto from 'crypto';
 
 // Initialize services
 const client = new GCArticlesClient();
@@ -15,7 +15,7 @@ const githubService = new GitHubService();
 const validator = new ContentValidator();
 const hashStore = new ContentHashStore();
 
-const WEBSITE_CONTENT_DIR = path.join(__dirname, '../../website');
+const WEBSITE_CONTENT_DIR = path.join(new URL('../../website', import.meta.url).pathname);
 
 /**
  * Ensures the directory exists, creates it if it doesn't

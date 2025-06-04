@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "PR Bot for managing GC-Articles content synchronization",
   "main": "src/index.js",
+  "type": "module",
   "private": true,
   "scripts": {
     "start": "node src/index.js",
