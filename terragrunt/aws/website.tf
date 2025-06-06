@@ -3,7 +3,7 @@ module "website" {
 
   domain_name_source = var.website_domain
   billing_tag_value  = var.billing_code
-  hosted_zone_id    = aws_route53_zone.gcds_protospace.zone_id
+  hosted_zone_id     = aws_route53_zone.gcds_protospace.zone_id
 
   providers = {
     aws           = aws

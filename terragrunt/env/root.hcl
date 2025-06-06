@@ -1,13 +1,13 @@
 locals {
-  vars         = read_terragrunt_config("./env_vars.hcl")
+  vars = read_terragrunt_config("./env_vars.hcl")
 }
 
 inputs = {
-  account_id                = local.vars.inputs.account_id
-  website_domain            = local.vars.inputs.website_domain
-  env                       = local.vars.inputs.env
-  region                    = local.vars.inputs.region
-  billing_code              = local.vars.inputs.billing_code
+  account_id     = local.vars.inputs.account_id
+  website_domain = local.vars.inputs.website_domain
+  env            = local.vars.inputs.env
+  region         = local.vars.inputs.region
+  billing_code   = local.vars.inputs.billing_code
 }
 
 remote_state {

@@ -6,7 +6,7 @@ inputs = {
   cbs_satellite_bucket_name = "cbs-satellite-730335533085"
   region                    = "ca-central-1"
   product_name              = "digital-canada-website"
-  buckets                   = {
+  buckets = {
     en = "gcds-protospace-website-en"
     fr = "gcds-protospace-website-fr"
   }
