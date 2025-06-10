@@ -28,7 +28,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PR_BOT_GITHUB_TOKEN }}
           GITHUB_OWNER: ${{ github.repository_owner }}
           GITHUB_REPO: ${{ github.event.repository.name }}
-          WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
+          GC_ARTICLES_API_URL: ${{ secrets.GC_ARTICLES_API_URL }}
           CONTENT_PATH: packages/website/content/en/posts
         run: |
           cd packages/pr-bot
