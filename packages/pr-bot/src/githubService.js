@@ -1,5 +1,5 @@
 import { Octokit } from '@octokit/rest';
-import { logger } from './utils/logger';
+import logger from './utils/logger.js';
 
 class GitHubService {
   constructor() {

@@ -1,5 +1,5 @@
-const winston = require('winston');
-const path = require('path');
+import winston from 'winston';
+import path from 'path';
 
 // Custom format that includes timestamp and metadata
 const customFormat = winston.format.combine(
@@ -86,4 +86,4 @@ class Logger {
   }
 }
 
-module.exports = new Logger();
+export default new Logger();
